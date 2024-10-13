@@ -199,3 +199,92 @@ async def remover_form(request: Request, mod_id: str):
 async def remover_modelo(mod_id: int):
     delecao = 'DELETE FROM MODELO_VEICULO WHERE MOD_ID = $1'
     await bd.execute(delecao, mod_id)
+
+# Veículos
+
+@app.get('/listar_veiculos', response_class=HTMLResponse)
+async def list_veiculos(request: Request):
+  veiculos = await bd.fetch('SELECT * FROM VEICULO')
+
+  return templates.TemplateResponse(
+    request, 'list_veiculos.html', context={'veiculos': veiculos}
+)
+
+@app.get('/adicionar_veiculo')
+async def adicionar_veiculo(request: Request):
+    return templates.TemplateResponse(
+        request, 'add_veiculo.html'
+)
+
+@app.post('/salvar_veiculo')
+async def adicionar_veiculo(mod_id: int = Form(...), cor: str = Form(...), ano_fabricacao: int = Form(...), ano_modelo: int = Form(...), 
+                           valor: float = Form(...), placa: str = Form(...), vendido: bool = Form(...)):
+    insercao = 'INSERT INTO VEICULO (MOD_ID, COR, ANO_FABRICACAO, ANO_MODELO, VALOR, PLACA, VENDIDO) VALUES ($1, $2, $3, $4, $5, $6, $7)'
+    await bd.execute(insercao, mod_id, cor, ano_fabricacao, ano_modelo, valor, placa, vendido)
+
+
+@app.get('/editar_veiculo/{veic_id}')
+async def editar_form(request: Request, veic_id: str):
+    veiculo_a_editar = None
+    veiculos = await bd.fetch('SELECT * FROM VEICULO')
+
+    for veiculo in veiculos: 
+        if veiculo['veic_id'] == int(veic_id):
+            veiculo_a_editar = veiculo
+
+    if veiculo_a_editar is None:
+        return templates.TemplateResponse(
+            request, '404.html'
+        )
+    
+    return templates.TemplateResponse(
+        request, 'editar_veiculo.html', context={'veiculo': veiculo_a_editar}
+    )
+
+@app.post('/editar_salvar_veiculo/{veic_id}')
+async def editar_veiculo(veic_id: int, mod_id: int = Form(...), cor: str = Form(...), ano_fabricacao: int = Form(...), ano_modelo: int = Form(...), 
+                           valor: float = Form(...), placa: str = Form(...), vendido: bool = Form(...)):
+    atualizacao = 'UPDATE VEICULO SET MOD_ID = $1, COR = $2, ANO_FABRICACAO = $3, ANO_MODELO = $4, VALOR = $5, PLACA = $6, VENDIDO = $7 WHERE VEIC_ID = $8'
+    await bd.execute(atualizacao, mod_id, cor, ano_fabricacao, ano_modelo, valor, placa, vendido, veic_id)
+
+
+@app.get('/detalhar_veiculo/{veic_id}')
+async def detalhar_veiculo(request: Request, veic_id: str):
+    veiculo_a_detalhar = None
+    veiculos = await bd.fetch('SELECT * FROM VEICULO')
+
+    for veiculo in veiculos: 
+        if veiculo['veic_id'] == int(veic_id):
+            veiculo_a_detalhar = veiculo
+
+    if veiculo_a_detalhar is None:
+        return templates.TemplateResponse(
+            request, '404.html'
+        )
+    
+    return templates.TemplateResponse(
+        request, 'detalhar_veiculo.html', context={'veiculo': veiculo_a_detalhar}
+    )
+
+@app.get('/remover_veiculo/{veic_id}')
+async def remover_form(request: Request, veic_id: str):
+    veiculo_a_remover = None
+    veiculos = await bd.fetch('SELECT * FROM VEICULO')
+
+    for veiculo in veiculos: 
+        if veiculo['veic_id'] == int(veic_id):
+            veiculo_a_remover = veiculo
+
+    if veiculo_a_remover is None:
+        return templates.TemplateResponse(
+            request, '404.html'
+        )
+    
+    return templates.TemplateResponse(
+        request, 'remover_veiculo.html', context={'veiculo': veiculo_a_remover}
+    )
+
+@app.post('/remover_salvar_veiculo/{veic_id}')
+async def remover_veiculo(veic_id: int):
+    delecao = 'DELETE FROM VEICULO WHERE VEIc_ID = $1'
+    await bd.execute(delecao, veic_id)
